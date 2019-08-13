@@ -93,7 +93,7 @@ def retrieve():
         return jsonify({ 'Error': 'Error something is wrong. check it out.'})
 
 #route for saving to cart
-@app.route('/api/saved', methods=['POST'])
+@app.route('/api/saved', methods=['POST', 'GET'])
 def saved():
     try:
         #get headers
@@ -137,6 +137,70 @@ def saved():
         return jsonify({'Error': 'Try again haha'})
 
 
-#route for deleted from cart
-@app.route('/api/deleted')
+#route for deleted from cart.
+@app.route('/api/deleted', methods=['DELETE', 'GET'])
 def deleted():
+
+    try:
+        id = request.headers.get('id')
+
+        cart = Cart.query.filter_by(id=id).first()
+
+        if cart == []:
+            return jsonify({ 'Success': 'That product is not in the cart'})
+
+        name = cart.title
+
+
+        #deleting product from cart
+        db.session.delete(cart)
+
+        #commit
+        db.session.commit()
+
+        # #querying new cart to update state
+        # new_cart = Cart.query.all()
+        #
+        #
+        # if new_cart == []:
+        #     return jsonify({ 'Error' :'Your cart is empty'})
+        #
+        # print('test')
+        # print(new_cart)
+        #
+        # zlist = []
+        #
+        # for a in new_cart:
+        #     print(new_cart[a])
+        # for new in new_cart:
+        #     print(new_cart[new])
+
+        return jsonify({'Success': f'Product: {name} deleted.'})
+
+    except:
+        return jsonify({ 'Error': 'There was an issue with your request'})
+
+#route for getting the cart.
+@app.route('/api/retrieved', methods=['GET'])
+def retrieved():
+    carts = Cart.query.all()
+
+    if carts == []:
+        return jsonify ({ 'Success': {
+        'cart': []
+        }})
+
+    clist = []
+
+    for cart in carts:
+        dlist = {
+        'id': cart.id,
+        'title': cart.title,
+        'price': cart.price,
+        'description': cart.description
+        }
+        clist.append(dlist)
+
+    return jsonify({ 'Success': {
+    'cart': clist
+    }})
